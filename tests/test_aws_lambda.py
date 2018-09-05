@@ -5,11 +5,11 @@ import sys
 
 
 
-lib_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+lib_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'wsgimagic')
 if lib_dir not in sys.path:
     sys.path.insert(1, lib_dir)
 
-from wsgimagic import _WSGIHandler, _basic_error_handler, _APIGatewayEvent
+from aws_lambda import _WSGIHandler, _basic_error_handler, _APIGatewayEvent
 
 
 fake_event = {

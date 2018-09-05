@@ -124,7 +124,7 @@ class _WSGIHandler:
 
 def wsgi_magic(wsgi_application, additional_response_headers: dict=dict(), server: str='', port: int=0,
                error_handler=_basic_error_handler):
-    """This is the magical decorator that handles all of your WSGI application needs!
+    """This is the magical decorator that handles all of your Lambda WSGI application needs!
 
     Keyword Args:
         wsgi_application: The application that will be fed the wsgi request.
