@@ -96,7 +96,8 @@ class _WSGIHandler:
             if exc_info is not None:
                 raise(exc_info[0], exc_info[1], exc_info[2])
             response_header_dict = {tup[0]: tup[1] for tup in response_headers}
-            response_header_dict.update(self.additional_response_headers)
+            if self.additional_response_headers is not None:
+                response_header_dict.update(self.additional_response_headers)
             response_header_dict.update({'Date': datetime.now().strftime("%a, %d %b %Y %H:%M:%S EST"),
                                          'Server': 'WSGIMagic'})
             self.response_status = status
