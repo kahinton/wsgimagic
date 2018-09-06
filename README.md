@@ -11,6 +11,7 @@ informaton back to get a proper response to the client. WSGIMagic allows you to 
 The following example illustrates a very small example using Flask.
 
 from flask import Flask
+
 from wsgimagic.aws_lambda import lambda_magic
 
 
