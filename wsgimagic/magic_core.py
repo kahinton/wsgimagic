@@ -94,4 +94,4 @@ class WSGIHandler:
     def handle_request(self, request: TranslatedRequest) -> 'RequiredResponse':
         result = self.app(self.generate_env_dict(request, self.server, self.port),
                           self.wsgi_callback)
-        return self.build_response(result)
+        return self.build_response(self, result)
