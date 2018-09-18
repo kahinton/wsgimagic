@@ -7,12 +7,12 @@ class TranslatedRequest:
     """All sub modules should translate their incoming request object into this form to be passed
     off to the WSGIHandler.
     """
-    def __init__(self, path: str, http_method: str, headers: dict, query_string_parameters: dict,
+    def __init__(self, path: str, http_method: str, headers: dict, query_string: str,
                  body: str):
         self.path = path
         self.http_method = http_method
         self.headers = headers
-        self.query_string_parameters = query_string_parameters
+        self.query_string= query_string
         self.body = body
 
 
@@ -68,9 +68,8 @@ class WSGIHandler:
         environment['PATH_INFO'] = request.path
         environment['SERVER_NAME'] = server
         environment['SERVER_PORT'] = str(port)
-        if request.query_string_parameters is not None:
-            environment['QUERY_STRING'] = '&'.join(['{0}={1}'.format(key, value) for key, value
-                                                    in request.query_string_parameters.items()])
+        if request.query_string is not None:
+            environment['QUERY_STRING'] = request.query_string
         else:
             environment['QUERY_STRING'] = ''
         environment.update(request.headers)
