@@ -17,7 +17,9 @@ fake_event = {
     "path": '/test',
     "httpMethod": 'GET',
     "headers": {"test": "test"},
+    "multiValueHeaders": {"test1": ['1,2,3']},
     "queryStringParameters": {'t': 'test', 't2': 'test2'},
+    "multiValueQueryStringParameters": {"mquerytest1": ['1,2,3']},
     "pathParameters":  {},
     "stageVariables": {},
     "requestContext": {},
@@ -42,8 +44,9 @@ class TestWsgiMagic(unittest.TestCase):
         translated = _map_api_gateway_to_request(**fake_event)
 
         # ASSERT
-        needed_result = TranslatedRequest('/test', 'GET', {'HTTP_TEST': 'test'},
-                                          't=test&t2=test2', 'test')
+        needed_result = TranslatedRequest('/test', 'GET', {'HTTP_TEST': 'test',
+                                                           'HTTP_TEST1': '1,2,3'},
+                                          't=test&t2=test2&mquerytest1=1,2,3', 'test')
 
         self.assertEqual(translated.__dict__, needed_result.__dict__)
 
