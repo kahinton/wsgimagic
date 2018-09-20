@@ -9,17 +9,20 @@ from io import StringIO
 from datetime import datetime
 from functools import wraps
 import base64
-from magic_core import TranslatedRequest, WSGIHandler
+from wsgimagic.magic_core import TranslatedRequest, WSGIHandler
 
 
 def _map_api_gateway_to_request(resource: str, path: str, httpMethod: str, headers: dict,
-                                queryStringParameters: dict, pathParameters: dict,
+                                multiValueHeaders: dict, queryStringParameters: dict,
+                                multiValueQueryStringParameters: dict, pathParameters: dict,
                                 stageVariables: dict, requestContext: dict, body: str,
-                                isBase64Encoded: bool):
+                                isBase64Encoded: bool, **kwargs):
     """Maps the incoming event from API Gateway to the necessary request structure for our
-    application.
+    application. Note the use of the addition **kwargs in case Amazon adds new fields.
     """
     mapped_headers = {'HTTP_'+key.upper(): value for key, value in headers.items()}
+    if multiValueHeaders is not None:
+        mapped_headers.update({'HTTP_'+key.upper(): value[0] for key, value in multiValueHeaders.items()})
     request_body = body
     if isBase64Encoded:
         request_body = base64.b64decode(request_body)
@@ -28,6 +31,13 @@ def _map_api_gateway_to_request(resource: str, path: str, httpMethod: str, heade
     if len(queryStringParameters) > 0:
         query_string = '&'.join(['{0}={1}'.format(key, value) for key, value
                                  in queryStringParameters.items()])
+    if multiValueQueryStringParameters is not None:
+        additional_query_string = '&'.join(['{0}={1}'.format(key, value[0]) for key, value
+                                 in multiValueQueryStringParameters.items()])
+        if query_string is None:
+            query_string = additional_query_string
+        else:
+            query_string += '&' + additional_query_string
 
     return TranslatedRequest(path, httpMethod, mapped_headers, query_string, request_body)
 
