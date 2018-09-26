@@ -1,0 +1,6 @@
+language: python
+python:
+  - "3.6"
+script:
+  - tests/test_magic_core
+  - tests/test_aws_lambda
