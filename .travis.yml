@@ -2,6 +2,8 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install pytest-cov
+  - pip install --user pytest-cov codecov
 script:
   - pytest --cov=wsgimagic tests/
+after_success:
+  - codecov
