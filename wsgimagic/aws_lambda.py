@@ -9,7 +9,7 @@ from io import StringIO
 from datetime import datetime
 from functools import wraps
 import base64
-from wsgimagic.magic_core import TranslatedRequest, RawResponse, WSGIHandler
+from magic_core import TranslatedRequest, RawResponse, WSGIHandler
 
 
 def _map_api_gateway_to_request(resource: str, path: str, httpMethod: str, headers: dict,
