@@ -9,7 +9,7 @@ from io import StringIO
 from datetime import datetime
 from functools import wraps
 import base64
-from wsgimagic.magic_core import TranslatedRequest, WSGIHandler
+from wsgimagic.magic_core import TranslatedRequest, RawResponse, WSGIHandler
 
 
 def _map_api_gateway_to_request(resource: str, path: str, httpMethod: str, headers: dict,
@@ -22,7 +22,8 @@ def _map_api_gateway_to_request(resource: str, path: str, httpMethod: str, heade
     """
     mapped_headers = {'HTTP_'+key.upper(): value for key, value in headers.items()}
     if multiValueHeaders is not None:
-        mapped_headers.update({'HTTP_'+key.upper(): value[0] for key, value in multiValueHeaders.items()})
+        mapped_headers.update({'HTTP_'+key.upper(): value[0] for key, value in
+                               multiValueHeaders.items()})
     request_body = body
     if isBase64Encoded:
         request_body = base64.b64decode(request_body)
@@ -52,24 +53,24 @@ def _basic_error_handler(exception: Exception) -> dict:
             'body': 'Server Error'}
 
 
-def _build_proxy_response(self, result: 'iterable') -> dict:
+def _build_proxy_response(response: RawResponse, error_handler: callable) -> dict:
     """Once the application completes the request, maps the results into the format required by
     AWS.
     """
     try:
-        if self.caught_exception is not None:
-            raise self.caught_exception
-        message = ''.join([str(message) for message in result])
+        if response.caught_exception is not None:
+            raise response.caught_exception
+        message = ''.join([str(message) for message in response.result])
 
     except Exception as e:
-        return self.error_handler(e)
-    return {'statusCode': self.response_status.split(' ')[0],
-            'headers': self.outbound_headers,
+        return error_handler(e)
+    return {'statusCode': response.response_status.split(' ')[0],
+            'headers': response.outbound_headers,
             'body': message}
 
 
 def lambda_magic(wsgi_application, additional_response_headers: dict=dict(), server: str='',
-                 port: int=0, error_handler=_basic_error_handler):
+                 port: int=0, error_handler=_basic_error_handler, response_modifier: callable=None):
     """This is the magical decorator that handles all of your Lambda WSGI application needs!
 
     Keyword Args:
@@ -83,14 +84,19 @@ def lambda_magic(wsgi_application, additional_response_headers: dict=dict(), ser
                        goes really wrong. If you are implementing your own, make absolutely sure
                        that your function signature matches that of _basic_error_handler, otherwise
                        you'll fail to send an error, which is very embarrassing.
+        response_modifier: This is an optional callable that you can enter to act on the response
+                           from WSGIHandler. Make sure that this function is returning an instance
+                           of RawResponse, otherwise the _build_proxy_response function will error.
         """
     def internal(lambda_handler):
         @wraps(lambda_handler)
         def handle(*arg, **kwargs):
             lambda_handler(*arg, **kwargs)
             formatted_request = _map_api_gateway_to_request(**arg[0])
-            requester = WSGIHandler(wsgi_application, additional_response_headers, server, port,
-                                    _build_proxy_response, error_handler)
-            return requester.handle_request(formatted_request)
+            requester = WSGIHandler(wsgi_application, additional_response_headers, server, port)
+            response = requester.handle_request(formatted_request)
+            if response_modifier is not None:
+                response = response_modifier(response)
+            return _build_proxy_response(response, error_handler)
         return handle
     return internal

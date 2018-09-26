@@ -16,13 +16,25 @@ class TranslatedRequest:
         self.body = body
 
 
+class RawResponse:
+    """All submodules should expect to receive an instance of this class back from the
+    handle_response method of the WSGIHandler. all outgoing response mappers can then be designed to
+    build from this.
+    """
+    def __init__(self):
+        self.result: 'iterable' = None
+        self.caught_exception: Exception = None
+        self.response_status: str = None
+        self.outbound_headers: dict = dict()
+
+
 class WSGIHandler:
     """This class performs the heavy lifting of translating incoming requests and returning
     responses.
     """
 
     def __init__(self, wsgi_application: 'WSGI Application', additional_response_headers: dict,
-                 server: str, port: int, response_handler: callable, error_handler: callable):
+                 server: str, port: int):
         """ Initializer for the WSGIHandler class.
 
         Keyword Args:
@@ -32,25 +44,13 @@ class WSGIHandler:
         server: The server host name. This is only important if you are using it in your app.
         port: Since we aren't actually going to be binding to a port, this is mildly falsified, but
               use it if you need it!
-        response_handler: This is the callable that will doing that translation of the WSGI response
-                          back to the appropriate return type expected by the service that is
-                          being used. An end user should really never need to touch this.
-        error_handler: This is a callable that is used to return server error messages if something
-                       goes really wrong. If you are implementing your own, make absolutely sure
-                       that your function signature matches that of _basic_error_handler from the
-                       module that you are using, otherwise you'll fail to send an error, which is
-                       very embarrassing.
         """
 
         self.app = wsgi_application
         self.additional_response_headers = additional_response_headers
         self.server = server
         self.port = port
-        self.error_handler = error_handler
-        self.build_response = response_handler
-        self.caught_exception = None
-        self.response_status = None
-        self.outbound_headers = dict()
+        self.response = RawResponse()
 
     @staticmethod
     def generate_env_dict(request: TranslatedRequest, server: str, port: int) -> dict:
@@ -85,13 +85,13 @@ class WSGIHandler:
                 response_header_dict.update(self.additional_response_headers)
             response_header_dict.update({'Date': dt.now().strftime("%a, %d %b %Y %H:%M:%S EST"),
                                          'Server': 'WSGIMagic'})
-            self.response_status = status
-            self.outbound_headers = response_header_dict
+            self.response.response_status = status
+            self.response.outbound_headers = response_header_dict
 
         except Exception as e:
-            self.caught_exception = e
+            self.response.caught_exception = e
 
-    def handle_request(self, request: TranslatedRequest) -> 'RequiredResponse':
-        result = self.app(self.generate_env_dict(request, self.server, self.port),
-                          self.wsgi_callback)
-        return self.build_response(self, result)
+    def handle_request(self, request: TranslatedRequest) -> RawResponse:
+        self.response.result = self.app(self.generate_env_dict(request, self.server, self.port),
+                                        self.wsgi_callback)
+        return self.response
