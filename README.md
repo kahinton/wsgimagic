@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/kahinton/wsgimagic.svg?branch=master)](https://travis-ci.org/kahinton/wsgimagic)
-[![codecov](https://codecov.io/hg/kahinton/wsgimagic/branch/master/graph/badge.svg)](https://codecov.io/gh/kahinton/wsgimagic)
+
+
+[![codecov](https://codecov.io/gh/kahinton/wsgimagic/branch/master/graph/badge.svg)](https://codecov.io/gh/kahinton/wsgimagic)
+
+
 
 Welcome to WSGIMagic!
 
