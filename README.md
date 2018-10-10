@@ -17,6 +17,7 @@ Before you would need to find out how Amazon was structuring the incoming reques
 informaton back to get a proper response to the client. WSGIMagic allows you to handle everything with a basic decorator. 
 The following example illustrates a very small example using Flask.
 
+'''python
 from flask import Flask
 
 from wsgimagic.aws_lambda import lambda_magic
@@ -33,7 +34,7 @@ def hello()
 @lambda_magic(app)</br>
 def event_handler(event, context):
     pass
-    
+'''
     
 By using the lambda_magic decorator, the incoming API Gateway event will automatically be translated to the WSGI format 
 and passed off to your application. For basic request handling, this is all you need to do. The lambda_magic decorator 
