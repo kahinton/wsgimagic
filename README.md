@@ -26,12 +26,12 @@ from wsgimagic.aws_lambda import lambda_magic
 app = Flask(__name__)
 
 
-@app.route('/hello', allowed_methods=['GET'])</br>
+@app.route('/hello', allowed_methods=['GET'])
 def hello()
     return 'Hello World'
     
 
-@lambda_magic(app)</br>
+@lambda_magic(app)
 def event_handler(event, context):
     pass
 ```
